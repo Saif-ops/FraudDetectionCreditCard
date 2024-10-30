@@ -98,6 +98,8 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 - Thanks to the Apache Spark and AWS communities for their continuous support and resources.
 ```
+![image](https://github.com/user-attachments/assets/e3be6936-574d-4b52-bf26-9197739042af)
+
 
 ### Notes:
 - Replace `<repository-url>` and `<repository-directory>` with the actual URL and directory name of your project.
