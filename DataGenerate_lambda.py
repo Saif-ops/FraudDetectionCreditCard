@@ -1,34 +1,56 @@
-import faker
-from datetime import datetime
-import random
-import os
-import boto3
 import json
+import random
+#import boto3
+from datetime import datetime, timedelta
 
-fake = faker.Faker()
-kinesis_client = boto3.client('kinesis')
+# Initialize the Kinesis client
+#kinesis_client = boto3.client('kinesis')
 
-def generate_data():
-    """
-    Generates random transactions using faker module.
-    Return : A JSON object
-    """
-    transaction_data = {
-        "transaction_id" : fake.uuid4(),
-        "user_name": fake.name(),
-        "location": fake.city_name(),
-        "timestamp_utc": datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-        "transaction_amount": round(random.uniform(1.0, 1000.0), 2)
+# Define the Kinesis stream name
+#KINESIS_STREAM_NAME = "transaction_stream"
+
+def generate_random_transaction():
+    # Randomly generated transaction data
+    transaction = {
+        "transaction_id": random.randint(100000, 999999),
+        "user_name": random.choice(["Alice", "Bob", "Charlie", "David", "Eve"]),
+        "card_number": f"{random.randint(4000, 4999)}-****-****-{random.randint(1000, 9999)}",
+        "transaction_amount": round(random.uniform(10.0, 500.0), 2),
+        "timestamp_utc": datetime.now(),
+        "location": random.choice(["New York", "Delhi", "Kolkata", "London", "Tokyo"])
     }
-    return transaction_data
+    return transaction
 
-def lambda_handler(event,context):
-    stream_name = os.environ['STREAM_NAME']
-    transaction_data = generate_data()
-    try:
-        response = kinesis_client.put_record(StreamName=stream_name,Data=json.dumps(transaction_data),partitionKey=transaction_data['transaction_id'])
-        print("Data Delivered to kinesis")
-    except Exception as e:
-        print(f"Error sending data to kinesis : {e}")
-
-
+def lambda_handler(event, context):
+    # Generate a mock transaction
+    for i in range(50):
+        transaction = generate_random_transaction()
+        
+        # Convert transaction to JSON format
+        data = json.dumps(transaction)
+        
+        try:
+            # Send data to Kinesis stream
+            response = kinesis_client.put_record(
+                StreamName=KINESIS_STREAM_NAME,
+                Data=data,
+                PartitionKey=str(transaction["transaction_id"])
+            )
+            print(f"Transaction sent to Kinesis: {transaction}")
+            return {
+                "statusCode": 200,
+                "body": json.dumps({
+                    "message": "Transaction sent successfully",
+                    "transaction_id": transaction["transaction_id"],
+                    "kinesis_response": response
+                })
+            }
+        except Exception as e:
+            print(f"Error sending transaction to Kinesis: {e}")
+            return {
+                "statusCode": 500,
+                "body": json.dumps({
+                    "message": "Error sending transaction",
+                    "error": str(e)
+                })
+            }
